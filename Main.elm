@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import Platform.Sub
+import Time exposing (Time, every, second)
 
 
 type alias Model =
@@ -30,6 +31,7 @@ type Msg
     | MsgReset
     | MsgReady
     | Start
+    | Tick Time
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -47,6 +49,18 @@ update msg model =
             in
                 ( { model | numberOfParticipants = finalNum }, Cmd.none )
 
+        UpdateTotalTime time ->
+            let
+                totalTime =
+                    case String.toInt time of
+                        Ok val ->
+                            val
+
+                        Err _ ->
+                            0
+            in
+                ( { model | totalTime = totalTime }, Cmd.none )
+
         MsgReady ->
             ( { model | page = Ready }, Cmd.none )
 
@@ -56,13 +70,18 @@ update msg model =
         Start ->
             ( { model | page = Running }, Cmd.none )
 
-        _ ->
-            ( model, Cmd.none )
+        Tick _ ->
+            ( { model | totalTime = model.totalTime - 1 }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model.page of
+        Running ->
+            every second Tick
+
+        _ ->
+            Sub.none
 
 
 viewHeader =
@@ -76,7 +95,7 @@ viewInputs =
     div []
         [ input [ placeholder "# of participants", onInput UpdateParticipants ] []
         , br [] []
-        , input [ placeholder "Total time" ] []
+        , input [ placeholder "Total time", onInput UpdateTotalTime ] []
         ]
 
 
