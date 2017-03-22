@@ -3,6 +3,7 @@ module Main exposing (main)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
+import Platform.Sub
 
 
 type alias Model =
@@ -12,9 +13,9 @@ type alias Model =
     }
 
 
-model : Model
-model =
-    Model 0 300 Setup
+init : ( Model, Cmd Msg )
+init =
+    ( Model 0 300 Setup, Cmd.none )
 
 
 type Page
@@ -31,7 +32,7 @@ type Msg
     | Start
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UpdateParticipants num ->
@@ -44,19 +45,24 @@ update msg model =
                         Err _ ->
                             0
             in
-                { model | numberOfParticipants = finalNum }
+                ( { model | numberOfParticipants = finalNum }, Cmd.none )
 
         MsgReady ->
-            { model | page = Ready }
+            ( { model | page = Ready }, Cmd.none )
 
         MsgReset ->
-            { model | page = Setup }
+            ( { model | page = Setup }, Cmd.none )
 
         Start ->
-            { model | page = Running }
+            ( { model | page = Running }, Cmd.none )
 
         _ ->
-            model
+            ( model, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
 
 
 viewHeader =
@@ -124,8 +130,9 @@ view model =
 
 
 main =
-    beginnerProgram
-        { model = model
+    program
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
